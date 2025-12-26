@@ -1,4 +1,4 @@
-npm install @anthropic-ai/sdk
+npm install @google/generative-ai
   
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
