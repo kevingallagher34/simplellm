@@ -48,22 +48,36 @@ app.get("/", (req, res) => {
 
   <div id="reply" class="reply"></div>
 
-  <script>
-    async function send() {
-      const message = document.getElementById("message").value;
-      const replyDiv = document.getElementById("reply");
-      replyDiv.textContent = "Thinking...";
+ <script>
+  async function send() {
+    const message = document.getElementById("message").value;
+    const replyDiv = document.getElementById("reply");
+    replyDiv.textContent = "Thinking...";
 
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      });
+    const chatRes = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
 
-      const data = await res.json();
-      replyDiv.textContent = data.reply || JSON.stringify(data);
-    }
-  </script>
+    const chatData = await chatRes.json();
+    replyDiv.textContent = chatData.reply;
+
+    // Call TTS
+    const speakRes = await fetch("/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: chatData.reply })
+    });
+
+    const audioBlob = await speakRes.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    const audio = new Audio(audioUrl);
+    audio.play();
+  }
+</script>
+
 </body>
 </html>
   `);
@@ -88,6 +102,53 @@ app.post("/chat", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+app.post("/speak", async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    const voiceId = "21m00Tcm4TlvDq8ikWAM"; // Rachel (default, good voice)
+
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "xi-api-key": process.env.ELEVENLABS_API_KEY
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_monolingual_v1",
+          voice_settings: {
+            stability: 0.4,
+            similarity_boost: 0.75
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText);
+    }
+
+    const audioBuffer = Buffer.from(await response.arrayBuffer());
+
+    res.set({
+      "Content-Type": "audio/mpeg",
+      "Content-Length": audioBuffer.length
+    });
+
+    res.send(audioBuffer);
+
+  } catch (err) {
+    console.error("ElevenLabs error:", err);
+    res.status(500).json({ error: "TTS failed" });
+  }
+});
+
 
 
 const PORT = process.env.PORT || 3000;
