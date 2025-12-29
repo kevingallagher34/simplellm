@@ -1,5 +1,7 @@
 const express = require("express");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const models = await genAI.listModels();
+console.log(models);
 
 const app = express();
 app.use(express.json());
@@ -15,8 +17,7 @@ app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
-    const models = await genAI.listModels();
-console.log(models);
+    
 
 
     const model = genAI.getGenerativeModel({
