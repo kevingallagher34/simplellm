@@ -1,13 +1,11 @@
 const express = require("express");
-const { GoogleGenerativeAI } = require("@google/genai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 app.use(express.json());
 
-// Create client (NO `new`)
-const genAI = new GoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
+// This IS a constructor in this package
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.get("/", (req, res) => {
   res.send("simplellm with Gemini is running");
@@ -27,7 +25,7 @@ app.post("/chat", async (req, res) => {
     res.json({ reply: text });
 
   } catch (err) {
-    console.error("Gemini request failed:", err);
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
