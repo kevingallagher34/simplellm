@@ -50,31 +50,49 @@ app.get("/", (req, res) => {
 
  <script>
   async function send() {
-    const message = document.getElementById("message").value;
-    const replyDiv = document.getElementById("reply");
-    replyDiv.textContent = "Thinking...";
+  const message = document.getElementById("message").value;
+  const replyDiv = document.getElementById("reply");
+  replyDiv.textContent = "Thinking...";
 
-    const chatRes = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message })
-    });
+  const chatRes = await fetch("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+  });
 
-    const chatData = await chatRes.json();
-    replyDiv.textContent = chatData.reply;
+  const chatData = await chatRes.json();
+  replyDiv.textContent = chatData.reply;
 
-    // Call TTS
-    const speakRes = await fetch("/speak", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: chatData.reply })
-    });
+  // Call browser TTS instead of server
+  speak(chatData.reply);
+}
 
-    const audioBlob = await speakRes.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
 
-    const audio = new Audio(audioUrl);
-    audio.play();
+  function speak(text) {
+    if (!("speechSynthesis" in window)) {
+      console.warn("Speech synthesis not supported in this browser.");
+      return;
+    }
+
+    // Stop anything already speaking
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Gentle, natural defaults
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Optional: pick a nicer voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.toLowerCase().includes("natural") ||
+      v.name.toLowerCase().includes("english")
+    );
+    if (preferred) utterance.voice = preferred;
+
+    window.speechSynthesis.speak(utterance);
   }
 </script>
 
