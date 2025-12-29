@@ -11,6 +11,69 @@ app.get("/", (req, res) => {
   res.send("simplellm with Gemini is running");
 });
 
+app.get("/", (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>simplellm</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+    }
+    .reply {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>simplellm</h1>
+
+  <textarea id="message" placeholder="Say something..."></textarea><br/>
+  <button onclick="send()">Send</button>
+
+  <div id="reply" class="reply"></div>
+
+  <script>
+    async function send() {
+      const message = document.getElementById("message").value;
+      const replyDiv = document.getElementById("reply");
+      replyDiv.textContent = "Thinking...";
+
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+      replyDiv.textContent = data.reply || JSON.stringify(data);
+    }
+  </script>
+</body>
+</html>
+  `);
+});
+
+
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
