@@ -1,7 +1,5 @@
 const express = require("express");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const models = await genAI.listModels();
-console.log(models);
 
 const app = express();
 app.use(express.json());
@@ -17,11 +15,8 @@ app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
-    
-
-
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5"
+      model: "gemini-1.5" // <-- use this
     });
 
     const result = await model.generateContent(message);
@@ -30,10 +25,11 @@ app.post("/chat", async (req, res) => {
     res.json({ reply: text });
 
   } catch (err) {
-    console.error(err);
+    console.error("Gemini request failed:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
