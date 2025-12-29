@@ -8,10 +8,6 @@ app.use(express.json());
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.get("/", (req, res) => {
-  res.send("simplellm with Gemini is running");
-});
-
-app.get("/", (req, res) => {
   res.send(`
 <!DOCTYPE html>
 <html>
