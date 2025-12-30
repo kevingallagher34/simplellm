@@ -14,8 +14,12 @@
 
 <div id="chat-container">
   <input id="message" placeholder="Say something..." />
-  <button onclick="send()">Send</button>
-  <button onclick="startListening()">🎤 Speak</button>
+<button onclick="sendAndSpeak()">Send</button>
+<button onclick="startListening()">🎤 Speak</button>
+<button onclick="speechSynthesis.speak(new SpeechSynthesisUtterance('Button test'))">
+  🔊 Test Voice
+</button>
+
   <div id="reply"></div>
 </div>
 
@@ -83,15 +87,17 @@ async function send() {
 
   const chatData = await chatRes.json();
   replyDiv.textContent = chatData.reply;
+
   speak(chatData.reply);
 }
 
+
 // ---------- TEXT TO SPEECH ----------
 function speak(text) {
-  if (!("speechSynthesis" in window)) {
-    console.warn("TTS not supported");
-    return;
-  }
+  const u = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(u);
+}
+
 
   window.speechSynthesis.cancel();
 
@@ -110,6 +116,14 @@ function speak(text) {
   }
 
   window.speechSynthesis.speak(utterance);
+}
+async function sendAndSpeak() {
+  // Establish trusted audio context
+  speechSynthesis.cancel();
+  const unlock = new SpeechSynthesisUtterance(" ");
+  speechSynthesis.speak(unlock);
+
+  await send();
 }
 
 </script>
