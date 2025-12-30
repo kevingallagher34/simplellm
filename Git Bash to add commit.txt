@@ -1,0 +1,5 @@
+Git Bash to add commit
+
+git add index.js
+git commit -m "COMMENT"
+git push

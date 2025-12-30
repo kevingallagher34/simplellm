@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>simplellm</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    #chat-container { max-width: 500px; margin: auto; }
+    input, button { font-size: 1rem; padding: 0.5rem; width: 100%; margin-top: 0.5rem; }
+    #reply { margin-top: 1rem; }
+  </style>
+</head>
+<body>
+
+<div id="chat-container">
+  <input id="message" placeholder="Say something..." />
+  <button onclick="send()">Send</button>
+  <div id="reply"></div>
+</div>
+
+<script>
+let loadedVoices = [];
+
+window.speechSynthesis.onvoiceschanged = () => {
+  loadedVoices = window.speechSynthesis.getVoices();
+};
+
+async function send() {
+  const message = document.getElementById("message").value;
+  const replyDiv = document.getElementById("reply");
+  replyDiv.textContent = "Thinking...";
+
+  const chatRes = await fetch("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+  });
+
+  const chatData = await chatRes.json();
+  replyDiv.textContent = chatData.reply;
+  speak(chatData.reply);
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.9;
+
+  const voice = loadedVoices.find(v =>
+    v.name.toLowerCase().includes("english")
+  ) || loadedVoices[0];
+
+  if (voice) utterance.voice = voice;
+  window.speechSynthesis.speak(utterance);
+}
+</script>
+
+</body>
+</html>
