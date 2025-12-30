@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 
 app.get("/", (req, res) => {
-  res.send(`
+  res.send('
 <!DOCTYPE html>
 <html>
 <head>
@@ -91,7 +91,7 @@ app.get("/", (req, res) => {
 
 </body>
 </html>
-  `);
+  ');
 });
 
 
