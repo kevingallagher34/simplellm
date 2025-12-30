@@ -15,16 +15,52 @@
 <div id="chat-container">
   <input id="message" placeholder="Say something..." />
   <button onclick="send()">Send</button>
+  <button onclick="startListening()">🎤 Speak</button>
   <div id="reply"></div>
 </div>
 
+
 <script>
 let loadedVoices = [];
+let recognition;
 
 window.speechSynthesis.onvoiceschanged = () => {
   loadedVoices = window.speechSynthesis.getVoices();
 };
 
+// ---------- SPEECH TO TEXT ----------
+function startListening() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Speech recognition not supported in this browser.");
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    document.getElementById("reply").textContent = "Listening…";
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    document.getElementById("message").value = transcript;
+    send(); // auto-send to LLM
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+  };
+
+  recognition.start();
+}
+
+// ---------- SEND TO LLM ----------
 async function send() {
   const message = document.getElementById("message").value;
   const replyDiv = document.getElementById("reply");
@@ -41,6 +77,7 @@ async function send() {
   speak(chatData.reply);
 }
 
+// ---------- TEXT TO SPEECH ----------
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
 
@@ -56,6 +93,7 @@ function speak(text) {
   window.speechSynthesis.speak(utterance);
 }
 </script>
+
 
 </body>
 </html>
