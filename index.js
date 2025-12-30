@@ -29,56 +29,65 @@ app.get("/", (req, res) => {
 </div>
 
 
- <script>
+<script>
+  // Step 1: declare a global array to hold voices
+  let loadedVoices = [];
+
+  // Step 2: populate it when browser voices are ready
+  window.speechSynthesis.onvoiceschanged = () => {
+    loadedVoices = window.speechSynthesis.getVoices();
+    console.log("Loaded voices:", loadedVoices.map(v => v.name));
+  };
+
+  // Step 3: send function
   async function send() {
-  const message = document.getElementById("message").value;
-  const replyDiv = document.getElementById("reply");
-  replyDiv.textContent = "Thinking...";
+    const message = document.getElementById("message").value;
+    const replyDiv = document.getElementById("reply");
+    replyDiv.textContent = "Thinking...";
 
-  const chatRes = await fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message })
-  });
+    try {
+      const chatRes = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
 
-  const chatData = await chatRes.json();
-  
-  replyDiv.textContent = chatData.reply;
+      if (!chatRes.ok) throw new Error(`HTTP ${chatRes.status}`);
 
-  // Call browser TTS instead of server
-  speak(chatData.reply);
-}
+      const chatData = await chatRes.json();
+      replyDiv.textContent = chatData.reply;
 
-
-  function speak(text) {
-    if (!("speechSynthesis" in window)) {
-      console.warn("Speech synthesis not supported in this browser.");
-      return;
+      speak(chatData.reply);
+    } catch (err) {
+      console.error("Chat request failed:", err);
+      replyDiv.textContent = "Error: " + err.message;
     }
+  }
 
-    // Stop anything already speaking
+  // Step 4: speak function
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-
-    // Gentle, natural defaults
     utterance.rate = 0.9;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // Optional: pick a nicer voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v =>
+    // use loaded voices
+    const preferred = loadedVoices.find(v =>
       v.name.toLowerCase().includes("natural") ||
       v.name.toLowerCase().includes("english")
     );
-    if (preferred) utterance.voice = preferred;
-
-    const voices = window.speechSynthesis.getVoices();
-utterance.voice = voices[0] || null; // fallback to first available voice
-window.speechSynthesis.speak(utterance);
+    utterance.voice = loadedVoices.find(v =>
+  v.name.toLowerCase().includes("natural") ||
+  v.name.toLowerCase().includes("english")
+) || loadedVoices[0] || null;
+    window.speechSynthesis.speak(utterance);
   }
 </script>
+
 
 </body>
 </html>
