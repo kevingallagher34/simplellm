@@ -42,9 +42,7 @@ app.get("/", (req, res) => {
   });
 
   const chatData = await chatRes.json();
-  const voices = window.speechSynthesis.getVoices();
-utterance.voice = voices[0] || null; // fallback to first available voice
-
+  
   replyDiv.textContent = chatData.reply;
 
   // Call browser TTS instead of server
@@ -76,7 +74,9 @@ utterance.voice = voices[0] || null; // fallback to first available voice
     );
     if (preferred) utterance.voice = preferred;
 
-    window.speechSynthesis.speak(utterance);
+    const voices = window.speechSynthesis.getVoices();
+utterance.voice = voices[0] || null; // fallback to first available voice
+window.speechSynthesis.speak(utterance);
   }
 </script>
 
