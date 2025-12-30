@@ -98,23 +98,6 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.95;
-  utterance.pitch = 1.0;
-  utterance.volume = 1.0;
-
-  // Always pick *something*
-  let voice =
-    loadedVoices.find(v => v.lang.startsWith("en")) ||
-    loadedVoices[0];
-
-  if (voice) {
-    utterance.voice = voice;
-  }
-
 async function sendAndSpeak() {
   // Establish trusted audio context
   speechSynthesis.cancel();
