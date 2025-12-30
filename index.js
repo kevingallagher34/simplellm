@@ -7,6 +7,9 @@ app.use(express.json());
 // This IS a constructor in this package
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+const voices = window.speechSynthesis.getVoices();
+utterance.voice = voices[0] || null; // fallback to first available voice
+
 app.get("/", (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -15,38 +18,18 @@ app.get("/", (req, res) => {
   <meta charset="UTF-8" />
   <title>simplellm</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 700px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      font-size: 16px;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      font-size: 16px;
-    }
-    .reply {
-      margin-top: 20px;
-      white-space: pre-wrap;
-      background: #f5f5f5;
-      padding: 12px;
-      border-radius: 6px;
-    }
-  </style>
-</head>
-<body>
-  <h1>simplellm</h1>
+  body { font-family: sans-serif; padding: 1rem; }
+  #chat-container { max-width: 500px; margin: auto; }
+  input, button { font-size: 1rem; padding: 0.5rem; width: 100%; margin-top: 0.5rem; }
+  #reply { margin-top: 1rem; }
+</style>
 
-  <textarea id="message" placeholder="Say something..."></textarea><br/>
+<div id="chat-container">
+  <input id="message" placeholder="Say something..." />
   <button onclick="send()">Send</button>
+  <div id="reply"></div>
+</div>
 
-  <div id="reply" class="reply"></div>
 
  <script>
   async function send() {
@@ -121,51 +104,50 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-
+/*
 app.post("/speak", async (req, res) => {
   try {
     const { text } = req.body;
+    const speechConfig = sdk.SpeechConfig.fromSubscription(
+      process.env.AZURE_SPEECH_KEY,
+      process.env.AZURE_SPEECH_REGION
+    );
+    speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural";
 
-    const voiceId = "21m00Tcm4TlvDq8ikWAM"; // Rachel (default, good voice)
-
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xi-api-key": process.env.ELEVENLABS_API_KEY
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_turbo_v2",
-          voice_settings: {
-            stability: 0.4,
-            similarity_boost: 0.75
-          }
-        })
-      }
+    const audioConfig = sdk.AudioConfig.fromAudioOutputStream(
+      sdk.PullAudioOutputStream.createPullStream()
     );
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText);
-    }
+    const synthesizer = new sdk.SpeechSynthesizer(
+      speechConfig,
+      audioConfig
+    );
 
-    const audioBuffer = Buffer.from(await response.arrayBuffer());
-
-    res.set({
-      "Content-Type": "audio/mpeg",
-      "Content-Length": audioBuffer.length
-    });
-
-    res.send(audioBuffer);
-
+    synthesizer.speakTextAsync(
+      text,
+      result => {
+        synthesizer.close();
+        if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+          const audioBuffer = Buffer.from(result.audioData);
+          res.set("Content-Type", "audio/mpeg");
+          res.send(audioBuffer);
+        } else {
+          console.error("Speech synthesis failed:", result.errorDetails);
+          res.status(500).json({ error: "TTS failed" });
+        }
+      },
+      err => {
+        synthesizer.close();
+        console.error("Azure TTS error:", err);
+        res.status(500).json({ error: "TTS error" });
+      }
+    );
   } catch (err) {
-    console.error("ElevenLabs error:", err);
-    res.status(500).json({ error: "TTS failed" });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
+*/
 
 
 
