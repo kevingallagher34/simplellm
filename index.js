@@ -7,8 +7,6 @@ app.use(express.json());
 // This IS a constructor in this package
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const voices = window.speechSynthesis.getVoices();
-utterance.voice = voices[0] || null; // fallback to first available voice
 
 app.get("/", (req, res) => {
   res.send(`
@@ -44,6 +42,9 @@ app.get("/", (req, res) => {
   });
 
   const chatData = await chatRes.json();
+  const voices = window.speechSynthesis.getVoices();
+utterance.voice = voices[0] || null; // fallback to first available voice
+
   replyDiv.textContent = chatData.reply;
 
   // Call browser TTS instead of server
