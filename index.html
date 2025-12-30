@@ -22,6 +22,14 @@
 
 <script>
 let loadedVoices = [];
+
+function loadVoices() {
+  loadedVoices = window.speechSynthesis.getVoices();
+}
+
+window.speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices(); // <-- important
+
 let recognition;
 
 window.speechSynthesis.onvoiceschanged = () => {
@@ -56,6 +64,7 @@ function startListening() {
   recognition.onerror = (event) => {
     console.error("Speech recognition error:", event.error);
   };
+window.speechSynthesis.cancel();
 
   recognition.start();
 }
@@ -79,19 +88,30 @@ async function send() {
 
 // ---------- TEXT TO SPEECH ----------
 function speak(text) {
-  if (!("speechSynthesis" in window)) return;
+  if (!("speechSynthesis" in window)) {
+    console.warn("TTS not supported");
+    return;
+  }
 
   window.speechSynthesis.cancel();
+
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.9;
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
 
-  const voice = loadedVoices.find(v =>
-    v.name.toLowerCase().includes("english")
-  ) || loadedVoices[0];
+  // Always pick *something*
+  let voice =
+    loadedVoices.find(v => v.lang.startsWith("en")) ||
+    loadedVoices[0];
 
-  if (voice) utterance.voice = voice;
+  if (voice) {
+    utterance.voice = voice;
+  }
+
   window.speechSynthesis.speak(utterance);
 }
+
 </script>
 
 
