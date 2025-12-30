@@ -115,8 +115,6 @@ function speak(text) {
     utterance.voice = voice;
   }
 
-  window.speechSynthesis.speak(utterance);
-}
 async function sendAndSpeak() {
   // Establish trusted audio context
   speechSynthesis.cancel();
